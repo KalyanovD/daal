@@ -176,9 +176,7 @@ protected:
         {
             const NumericTableFeature& f = (*_ddict)[i];
 
-            const std::shared_ptr<const arrow::Column> columnPtr = _table->column(i);
-            DAAL_ASSERT(columnPtr);
-            const std::shared_ptr<const arrow::ChunkedArray> columnChunkedArrayPtr = columnPtr->data();
+            const std::shared_ptr<const arrow::ChunkedArray> columnChunkedArrayPtr = _table->column(i);
             DAAL_ASSERT(columnChunkedArrayPtr);
             const arrow::ChunkedArray& columnChunkedArray = *columnChunkedArrayPtr;
             const int chunkCount = columnChunkedArray.num_chunks();
@@ -290,9 +288,7 @@ private:
             for (size_t j = 0; j < ncols; ++j)
             {
                 const NumericTableFeature& f = (*_ddict)[j];
-                const std::shared_ptr<const arrow::Column> columnPtr = _table->column(j);
-                DAAL_ASSERT(columnPtr);
-                const std::shared_ptr<const arrow::ChunkedArray> columnChunkedArrayPtr = columnPtr->data();
+                const std::shared_ptr<const arrow::ChunkedArray> columnChunkedArrayPtr = _table->column(j);
                 DAAL_ASSERT(columnChunkedArrayPtr);
                 const std::shared_ptr<const arrow::ChunkedArray> sliceChunkedArrayPtr = columnChunkedArrayPtr->Slice(idx + i, di);
                 DAAL_ASSERT(sliceChunkedArrayPtr);
@@ -366,9 +362,7 @@ private:
 
         const NumericTableFeature& f = (*_ddict)[featIdx];
 
-        const std::shared_ptr<const arrow::Column> columnPtr = _table->column(featIdx);
-        DAAL_ASSERT(columnPtr);
-        const std::shared_ptr<const arrow::ChunkedArray> columnChunkedArrayPtr = columnPtr->data();
+        const std::shared_ptr<const arrow::ChunkedArray> columnChunkedArrayPtr = _table->column(featIdx);
         DAAL_ASSERT(columnChunkedArrayPtr);
         const std::shared_ptr<const arrow::ChunkedArray> sliceChunkedArrayPtr = columnChunkedArrayPtr->Slice(idx, nrows);
         DAAL_ASSERT(sliceChunkedArrayPtr);
