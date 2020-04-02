@@ -302,12 +302,15 @@ Status KNNClassificationPredictKernel<algorithmFpType, defaultDense, cpu>::compu
             data_management::BlockDescriptor<algorithmFpType> xBD;
             const_cast<NumericTable &>(*x).getBlockOfRows(first, last - first, readOnly, xBD);
             const algorithmFpType * const dx = xBD.getBlockPtr();
+            for (size_t i = 0; i < last - first; ++i)
+            {
+                findNearestNeighbors(&dx[i * xColumnCount], local->heap, local->stack, k, radius, kdTreeTable, rootTreeNodeIndex, data);
+            }
             data_management::BlockDescriptor<algorithmFpType> yBD;
             y->getBlockOfRows(first, last - first, writeOnly, yBD);
             auto * const dy = yBD.getBlockPtr();
             for (size_t i = 0; i < last - first; ++i)
             {
-                findNearestNeighbors(&dx[i * xColumnCount], local->heap, local->stack, k, radius, kdTreeTable, rootTreeNodeIndex, data);
                 services::Status s = predict(dy[i * yColumnCount], local->heap, labels, k);
                 DAAL_CHECK_STATUS_THR(s)
             }
