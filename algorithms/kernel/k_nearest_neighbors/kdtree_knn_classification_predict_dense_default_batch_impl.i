@@ -300,22 +300,44 @@ Status KNNClassificationPredictKernel<algorithmFpType, defaultDense, cpu>::compu
 
             const algorithmFpType radius = MaxVal::get();
             data_management::BlockDescriptor<algorithmFpType> xBD;
-            const_cast<NumericTable &>(*x).getBlockOfRows(first, last - first, readOnly, xBD);
-            const algorithmFpType * const dx = xBD.getBlockPtr();
-            for (size_t i = 0; i < last - first; ++i)
-            {
-                findNearestNeighbors(&dx[i * xColumnCount], local->heap, local->stack, k, radius, kdTreeTable, rootTreeNodeIndex, data);
-            }
+            // const_cast<NumericTable &>(*x).getBlockOfRows(first, last - first, readOnly, xBD);
+            // const algorithmFpType * const dx = xBD.getBlockPtr();
             data_management::BlockDescriptor<algorithmFpType> yBD;
-            y->getBlockOfRows(first, last - first, writeOnly, yBD);
-            auto * const dy = yBD.getBlockPtr();
-            for (size_t i = 0; i < last - first; ++i)
+            // y->getBlockOfRows(first, last - first, writeOnly, yBD);
+            // auto * const dy = yBD.getBlockPtr();
+            // for (size_t i = 0; i < last - first; ++i)
+            // {
+            //     findNearestNeighbors(&dx[i * xColumnCount], local->heap, local->stack, k, radius, kdTreeTable, rootTreeNodeIndex, data);
+            //     services::Status s = predict(dy[i * yColumnCount], local->heap, labels, k);
+            //     DAAL_CHECK_STATUS_THR(s)
+            // }
+            // y->releaseBlockOfRows(yBD);
+            // const_cast<NumericTable &>(*x).releaseBlockOfRows(xBD);
+
+            const size_t block_size = 512;
+            const size_t n_blocks = (last - first) / block_size + !!((last - first) % block_size);
+
+
+            for (size_t ii = 0; ii < n_blocks; ++ii)
             {
-                services::Status s = predict(dy[i * yColumnCount], local->heap, labels, k);
-                DAAL_CHECK_STATUS_THR(s)
+                size_t start = first + ii * block_size;
+                size_t end = min<cpu>(static_cast<decltype(xRowCount)>(start + block_size), last);
+                size_t size = end - start;
+
+                const_cast<NumericTable &>(*x).getBlockOfRows(start, size, readOnly, xBD);
+                const algorithmFpType * const dx = xBD.getBlockPtr();
+                y->getBlockOfRows(start, size, writeOnly, yBD);
+                auto * const dy = yBD.getBlockPtr();
+
+                for (size_t i = 0; i < size; ++i)
+                {
+                    findNearestNeighbors(&dx[i * xColumnCount], local->heap, local->stack, k, radius, kdTreeTable, rootTreeNodeIndex, data);
+                    services::Status s = predict(dy[i * yColumnCount], local->heap, labels, k);
+                    DAAL_CHECK_STATUS_THR(s)
+                }
+                y->releaseBlockOfRows(yBD);
+                const_cast<NumericTable &>(*x).releaseBlockOfRows(xBD);
             }
-            y->releaseBlockOfRows(yBD);
-            const_cast<NumericTable &>(*x).releaseBlockOfRows(xBD);
         }
     });
 
