@@ -65,8 +65,8 @@ extern "C"
     DAAL_EXPORT void _daal_run_task_group(void * taskGroupPtr, daal::task * t);
     DAAL_EXPORT void _daal_wait_task_group(void * taskGroupPtr);
 
-    DAAL_EXPORT void _daal_tbb_task_scheduler_free(void *& init);
-    DAAL_EXPORT size_t _setNumberOfThreads(const size_t numThreads, void ** init);
+    DAAL_EXPORT void _daal_tbb_global_control_free(void *& controller);
+    DAAL_EXPORT size_t _setNumberOfThreads(const size_t numThreads, void ** controller);
 
     DAAL_EXPORT void * _daal_threader_env();
 
@@ -112,9 +112,9 @@ inline size_t threader_get_threads_number()
     return threader_env()->getNumberOfThreads();
 }
 
-inline size_t setNumberOfThreads(const size_t numThreads, void ** init)
+inline size_t setNumberOfThreads(const size_t numThreads, void ** controller)
 {
-    return _setNumberOfThreads(numThreads, init);
+    return _setNumberOfThreads(numThreads, controller);
 }
 
 template <typename F>

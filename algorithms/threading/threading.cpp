@@ -54,26 +54,26 @@ DAAL_EXPORT void _threaded_scalable_free(void * ptr)
 #endif
 }
 
-DAAL_EXPORT void _daal_tbb_task_scheduler_free(void *& init)
+DAAL_EXPORT void _daal_tbb_global_control_free(void *& controller)
 {
 #if defined(__DO_TBB_LAYER__)
-    if (init)
+    if (controller)
     {
-        delete static_cast<tbb::global_control *>(init);
-        init = nullptr;
+        delete static_cast<tbb::global_control *>(controller);
+        controller = nullptr;
     }
 #endif
 }
 
-DAAL_EXPORT size_t _setNumberOfThreads(const size_t numThreads, void ** init)
+DAAL_EXPORT size_t _setNumberOfThreads(const size_t numThreads, void ** controller)
 {
 #if defined(__DO_TBB_LAYER__)
     static tbb::spin_mutex mt;
     tbb::spin_mutex::scoped_lock lock(mt);
     if (numThreads != 0)
     {
-        _daal_tbb_task_scheduler_free(*init);
-        *init = static_cast<void *>(new tbb::global_control(tbb::global_control::max_allowed_parallelism, numThreads));
+        _daal_tbb_global_control_free(*controller);
+        *controller = static_cast<void *>(new tbb::global_control(tbb::global_control::max_allowed_parallelism, numThreads));
         daal::threader_env()->setNumberOfThreads(numThreads);
         return numThreads;
     }

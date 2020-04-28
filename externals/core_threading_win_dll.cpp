@@ -268,7 +268,7 @@ typedef void (*_daal_run_task_group_t)(void * taskGroupPtr, daal::task * t);
 typedef void (*_daal_wait_task_group_t)(void * taskGroupPtr);
 
 typedef bool (*_daal_is_in_parallel_t)();
-typedef void (*_daal_tbb_task_scheduler_free_t)(void *& init);
+typedef void (*_daal_tbb_global_control_free_t)(void *& controller);
 typedef size_t (*_setNumberOfThreads_t)(const size_t, void **);
 typedef void * (*_daal_threader_env_t)();
 
@@ -315,7 +315,7 @@ static _daal_run_task_group_t _daal_run_task_group_ptr   = NULL;
 static _daal_wait_task_group_t _daal_wait_task_group_ptr = NULL;
 
 static _daal_is_in_parallel_t _daal_is_in_parallel_ptr                   = NULL;
-static _daal_tbb_task_scheduler_free_t _daal_tbb_task_scheduler_free_ptr = NULL;
+static _daal_tbb_global_control_free_t _daal_tbb_global_control_free_ptr = NULL;
 static _setNumberOfThreads_t _setNumberOfThreads_ptr                     = NULL;
 static _daal_threader_env_t _daal_threader_env_ptr                       = NULL;
 
@@ -581,24 +581,24 @@ DAAL_EXPORT bool _daal_is_in_parallel()
     return _daal_is_in_parallel_ptr();
 }
 
-DAAL_EXPORT void _daal_tbb_task_scheduler_free(void *& init)
+DAAL_EXPORT void _daal_tbb_global_control_free(void *& controller)
 {
     load_daal_thr_dll();
-    if (_daal_tbb_task_scheduler_free_ptr == NULL)
+    if (_daal_tbb_global_control_free_ptr == NULL)
     {
-        _daal_tbb_task_scheduler_free_ptr = (_daal_tbb_task_scheduler_free_t)load_daal_thr_func("_daal_tbb_task_scheduler_free");
+        _daal_tbb_global_control_free_ptr = (_daal_tbb_global_control_free_t)load_daal_thr_func("_daal_tbb_global_control_free");
     }
-    return _daal_tbb_task_scheduler_free_ptr(init);
+    return _daal_tbb_global_control_free_ptr(controller);
 }
 
-DAAL_EXPORT size_t _setNumberOfThreads(const size_t numThreads, void ** init)
+DAAL_EXPORT size_t _setNumberOfThreads(const size_t numThreads, void ** controller)
 {
     load_daal_thr_dll();
     if (_setNumberOfThreads_ptr == NULL)
     {
         _setNumberOfThreads_ptr = (_setNumberOfThreads_t)load_daal_thr_func("_setNumberOfThreads");
     }
-    return _setNumberOfThreads_ptr(numThreads, init);
+    return _setNumberOfThreads_ptr(numThreads, controller);
 }
 
 DAAL_EXPORT void * _daal_threader_env()
