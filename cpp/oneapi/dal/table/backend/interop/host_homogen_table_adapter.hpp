@@ -16,7 +16,7 @@
 
 #pragma once
 
-// #include <daal/include/data_management/data/numeric_table.h>
+#include <daal/include/data_management/data/numeric_table.h>
 #include <daal/include/data_management/data/homogen_numeric_table.h>
 
 #include "oneapi/dal/table/homogen.hpp"
@@ -32,7 +32,7 @@ namespace oneapi::dal::backend::interop {
 // attempts to change the data inside objects of that class lead to undefined
 // behavior.
 template <typename Data>
-class host_homogen_table_adapter : public daal::data_management::HomogenNumericTable {
+class host_homogen_table_adapter : public daal::data_management::HomogenNumericTable<Data> {
     using status_t = daal::services::Status;
     using rw_mode_t = daal::data_management::ReadWriteMode;
     using ptr_t = daal::services::SharedPtr<host_homogen_table_adapter>;
@@ -117,7 +117,7 @@ private:
     bool check_column_index_in_range(const block_info& info) const;
 
     homogen_table original_table_;
-    daal::data_management::HomogenNumericTablePtr base_;
+    daal::data_management::NumericTablePtr base_;
 };
 
 } // namespace oneapi::dal::backend::interop
