@@ -14,8 +14,7 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include <daal/include/data_management/data/homogen_numeric_table.h>
-#include <daal/include/data_management/data/soa_numeric_table.h>
+/* #include <daal/include/data_management/data/soa_numeric_table.h> */
 #include "oneapi/dal/table/backend/interop/host_homogen_table_adapter.hpp"
 
 namespace oneapi::dal::backend::interop {
@@ -70,10 +69,10 @@ auto host_homogen_table_adapter<Data>::create(const homogen_table& table) -> ptr
 template <typename Data>
 host_homogen_table_adapter<Data>::host_homogen_table_adapter(const homogen_table& table,
                                                              status_t& stat)
-        : NumericTable(dal::detail::integral_cast<std::size_t>(table.get_column_count()),
-                       dal::detail::integral_cast<std::size_t>(table.get_row_count()),
-                       daal_dm::DictionaryIface::equal,
-                       stat),
+        : HomogenNumericTable(daal_dm::DictionaryIface::equal,
+                              dal::detail::integral_cast<std::size_t>(table.get_column_count()),
+                              dal::detail::integral_cast<std::size_t>(table.get_row_count()),
+                              stat),
           original_table_(table) {
     // The following const_cast is safe only when this class is used for read-only
     // operations. Use on write leads to undefined behaviour.
@@ -103,26 +102,26 @@ host_homogen_table_adapter<Data>::host_homogen_table_adapter(const homogen_table
         }
         this->_layout = daal_dm::NumericTableIface::aos;
     }
-    if (table.get_data_layout() == data_layout::column_major) {
-        daal_dm::SOANumericTablePtr base_soa =
-            daal_dm::SOANumericTable::create(column_count,
-                                             row_count,
-                                             daal_dm::DictionaryIface::equal,
-                                             &stat);
-        if (!stat.ok()) {
-            return;
-        }
+    // if (table.get_data_layout() == data_layout::column_major) {
+    //     daal_dm::SOANumericTablePtr base_soa =
+    //         daal_dm::SOANumericTable::create(column_count,
+    //                                          row_count,
+    //                                          daal_dm::DictionaryIface::equal,
+    //                                          &stat);
+    //     if (!stat.ok()) {
+    //         return;
+    //     }
 
-        for (std::size_t i = 0; i < column_count; i++) {
-            stat |= base_soa->setArray<Data>(&original_data[i * row_count], i);
+    //     for (std::size_t i = 0; i < column_count; i++) {
+    //         stat |= base_soa->setArray<Data>(&original_data[i * row_count], i);
 
-            if (!stat.ok()) {
-                return;
-            }
-        }
-        base_ = base_soa;
-        this->_layout = daal_dm::NumericTableIface::soa;
-    }
+    //         if (!stat.ok()) {
+    //             return;
+    //         }
+    //     }
+    //     base_ = base_soa;
+    //     this->_layout = daal_dm::NumericTableIface::soa;
+    // }
 
     this->_memStatus = daal_dm::NumericTableIface::userAllocated;
 
