@@ -25,6 +25,7 @@
 #define __KDTREE_KNN_CLASSIFICATION_MODEL_IMPL_
 
 #include "algorithms/k_nearest_neighbors/kdtree_knn_classification_model.h"
+#include "src/data_management/service_numeric_table.h"
 #include "src/services/service_data_utils.h"
 
 namespace daal
@@ -43,10 +44,11 @@ struct KDTreeNode
     double cutPoint;
 };
 
-class KDTreeTable : public data_management::AOSNumericTable
+template <CpuType cpu = daal::sse2>
+class KDTreeTableImpl : public internal::AOSNumericTableCPU<cpu>
 {
 public:
-    KDTreeTable(size_t rowCount, services::Status & st) : data_management::AOSNumericTable(sizeof(KDTreeNode), 4, rowCount, st)
+    KDTreeTableImpl(size_t rowCount, services::Status & st) : internal::AOSNumericTableCPU<cpu>(sizeof(KDTreeNode), 4, rowCount, st)
     {
         setFeature<size_t>(0, DAAL_STRUCT_MEMBER_OFFSET(KDTreeNode, dimension));
         setFeature<size_t>(1, DAAL_STRUCT_MEMBER_OFFSET(KDTreeNode, leftIndex));
@@ -54,8 +56,9 @@ public:
         setFeature<double>(3, DAAL_STRUCT_MEMBER_OFFSET(KDTreeNode, cutPoint));
         st |= allocateDataMemory();
     }
-    KDTreeTable(services::Status & st) : KDTreeTable(0, st) {}
+    KDTreeTableImpl(services::Status & st) : KDTreeTableImpl(0, st) {}
 };
+typedef KDTreeTableImpl<> KDTreeTable;
 typedef services::SharedPtr<KDTreeTable> KDTreeTablePtr;
 typedef services::SharedPtr<const KDTreeTable> KDTreeTableConstPtr;
 

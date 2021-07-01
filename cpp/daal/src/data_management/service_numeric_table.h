@@ -25,6 +25,7 @@
 #define __SERVICE_NUMERIC_TABLE_H__
 
 #include "data_management/data/homogen_numeric_table.h"
+#include "data_management/data/aos_numeric_table.h"
 #include "data_management/data/soa_numeric_table.h"
 #include "data_management/data/csr_numeric_table.h"
 #include "data_management/data/symmetric_matrix.h"
@@ -434,6 +435,85 @@ public:
     services::Status releaseBlockOfColumnValues(BlockDescriptor<int> & block) DAAL_C11_OVERRIDE { return releaseTFeature<int>(block); }
 
     virtual ~SOANumericTableCPU() {}
+};
+
+template <CpuType cpu>
+class AOSNumericTableCPU : public AOSNumericTable
+{
+public:
+    AOSNumericTableCPU(size_t structSize, size_t ncol, size_t nrow, services::Status & st)
+        : AOSNumericTable(structSize, ncol, nrow, st)
+    {}
+
+    static services::SharedPtr<SOANumericTableCPU<cpu> > create(size_t structSize = 0, size_t ncol = 0,
+                                                                size_t nrow = 0,
+                                                                services::Status * st = NULL)
+    {
+        DAAL_DEFAULT_CREATE_TEMPLATE_IMPL_EX(SOANumericTableCPU, DAAL_TEMPLATE_ARGUMENTS(cpu), structSize, ncol, nrow);
+    }
+
+    services::Status getBlockOfRows(size_t vector_idx, size_t vector_num, ReadWriteMode rwflag, BlockDescriptor<double> & block) DAAL_C11_OVERRIDE
+    {
+        return getTBlock<double>(vector_idx, vector_num, rwflag, block);
+    }
+    services::Status getBlockOfRows(size_t vector_idx, size_t vector_num, ReadWriteMode rwflag, BlockDescriptor<float> & block) DAAL_C11_OVERRIDE
+    {
+        return getTBlock<float>(vector_idx, vector_num, rwflag, block);
+    }
+    services::Status getBlockOfRows(size_t vector_idx, size_t vector_num, ReadWriteMode rwflag, BlockDescriptor<int> & block) DAAL_C11_OVERRIDE
+    {
+        return getTBlock<int>(vector_idx, vector_num, rwflag, block);
+    }
+
+    services::Status releaseBlockOfRows(BlockDescriptor<double> & block) DAAL_C11_OVERRIDE { return releaseTBlock<double>(block); }
+    services::Status releaseBlockOfRows(BlockDescriptor<float> & block) DAAL_C11_OVERRIDE { return releaseTBlock<float>(block); }
+    services::Status releaseBlockOfRows(BlockDescriptor<int> & block) DAAL_C11_OVERRIDE { return releaseTBlock<int>(block); }
+
+    services::Status getBlockOfColumnValues(size_t feature_idx, size_t vector_idx, size_t value_num, ReadWriteMode rwflag,
+                                            BlockDescriptor<double> & block) DAAL_C11_OVERRIDE
+    {
+        return getTFeature<double>(feature_idx, vector_idx, value_num, rwflag, block);
+    }
+    services::Status getBlockOfColumnValues(size_t feature_idx, size_t vector_idx, size_t value_num, ReadWriteMode rwflag,
+                                            BlockDescriptor<float> & block) DAAL_C11_OVERRIDE
+    {
+        return getTFeature<float>(feature_idx, vector_idx, value_num, rwflag, block);
+    }
+    services::Status getBlockOfColumnValues(size_t feature_idx, size_t vector_idx, size_t value_num, ReadWriteMode rwflag,
+                                            BlockDescriptor<int> & block) DAAL_C11_OVERRIDE
+    {
+        return getTFeature<int>(feature_idx, vector_idx, value_num, rwflag, block);
+    }
+
+    services::Status releaseBlockOfColumnValues(BlockDescriptor<double> & block) DAAL_C11_OVERRIDE { return releaseTFeature<double>(block); }
+    services::Status releaseBlockOfColumnValues(BlockDescriptor<float> & block) DAAL_C11_OVERRIDE { return releaseTFeature<float>(block); }
+    services::Status releaseBlockOfColumnValues(BlockDescriptor<int> & block) DAAL_C11_OVERRIDE { return releaseTFeature<int>(block); }
+
+    template <typename T>
+    services::Status setFeature(size_t idx, size_t offset, features::FeatureType featureType = features::DAAL_CONTINUOUS, size_t categoryNumber = 0)
+    {
+        if (offset >= _structSize || idx >= getNumberOfColumns())
+        {
+            return services::throwIfPossible(services::Status(services::ErrorIncorrectDataRange));
+        }
+
+        services::Status s;
+        if (_ddict.get() == NULL)
+        {
+            _ddict = NumericTableDictionaryCPU<cpu>::create(&s);
+        }
+        if (!s) return s;
+
+        s = _ddict->setFeature<T>(idx);
+        if (!s) return s;
+        (*_ddict)[idx].featureType    = featureType;
+        (*_ddict)[idx].categoryNumber = categoryNumber;
+
+        _offsets[idx] = offset;
+        return s;
+    }
+
+    virtual ~AOSNumericTableCPU() {}
 };
 
 template <typename algorithmFPType, typename algorithmFPAccessType, CpuType cpu, ReadWriteMode mode, typename NumericTableType>
